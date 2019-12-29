@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
@@ -38,10 +36,17 @@ func main() {
 	client = newClient
 	user = newUser
 
-	fmt.Println("Welcome to Delete-A-Tweet")
+	fmt.Println(`
+██████╗ ███████╗██╗     ███████╗████████╗███████╗     █████╗    ████████╗██╗    ██╗███████╗███████╗████████╗
+██╔══██╗██╔════╝██║     ██╔════╝╚══██╔══╝██╔════╝    ██╔══██╗   ╚══██╔══╝██║    ██║██╔════╝██╔════╝╚══██╔══╝
+██║  ██║█████╗  ██║     █████╗     ██║   █████╗█████╗███████║█████╗██║   ██║ █╗ ██║█████╗  █████╗     ██║
+██║  ██║██╔══╝  ██║     ██╔══╝     ██║   ██╔══╝╚════╝██╔══██║╚════╝██║   ██║███╗██║██╔══╝  ██╔══╝     ██║
+██████╔╝███████╗███████╗███████╗   ██║   ███████╗    ██║  ██║      ██║   ╚███╔███╔╝███████╗███████╗   ██║
+╚═════╝ ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚══════╝    ╚═╝  ╚═╝      ╚═╝    ╚══╝╚══╝ ╚══════╝╚══════╝   ╚═╝
+	`)
 	fmt.Println("Please type 'exit' to terminate this program")
-	fmt.Println("\nYou have successfully authenticated to Twitter")
 	fmt.Println("You are signed in as", user.Name)
+	fmt.Println("Begin by typing 'load' to load all of your tweets")
 	p := prompt.New(executor, completer)
 	p.Run()
 }
@@ -52,30 +57,33 @@ func reviewTweet() {
 		return
 	}
 	currentTweet := tweets[curr]
-	fmt.Printf("(%d) %s\n", currentTweet.ID, currentTweet.Text)
+	time, err := currentTweet.CreatedAtTime()
+	if err != nil {
+		return
+	}
+
+	fmt.Printf(`
+(%d) %s                                    
+									 
+%d (R) %d (r) %d (f)
+Created at: %s
+`,
+		currentTweet.ID, currentTweet.Text, currentTweet.ReplyCount,
+		currentTweet.RetweetCount, currentTweet.FavoriteCount, time.String())
 }
 
 func executor(in string) {
-	input := strings.Split(strings.TrimSpace(in), " ")
-	switch input[0] {
+	switch in {
 	case "exit":
 		fmt.Println("exiting...")
 		os.Exit(0)
 	case "load":
-		if len(input) > 1 {
-			c, err := strconv.Atoi(input[1])
-			if err != nil {
-				fmt.Println("failed to get tweet count")
-				return
-			}
-			count = c
-		}
-		err := loadTweets(count)
+		err := loadTweets(user.StatusesCount)
 		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Printf("Loaded %d tweets\n", len(tweets))
-		fmt.Println("Type 'review' or 'r' to begin..")
+		fmt.Println("Type 'review'to begin..")
 		// ability to load more
 	case "delete":
 		fmt.Println("deleting tweet")
