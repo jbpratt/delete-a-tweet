@@ -18,7 +18,6 @@ var (
 	current twitter.Tweet
 	tweets  []twitter.Tweet
 	curr    int
-	count   int = 50
 )
 
 func main() {
@@ -37,12 +36,12 @@ func main() {
 	user = newUser
 
 	fmt.Println(`
-██████╗ ███████╗██╗     ███████╗████████╗███████╗     █████╗    ████████╗██╗    ██╗███████╗███████╗████████╗
-██╔══██╗██╔════╝██║     ██╔════╝╚══██╔══╝██╔════╝    ██╔══██╗   ╚══██╔══╝██║    ██║██╔════╝██╔════╝╚══██╔══╝
-██║  ██║█████╗  ██║     █████╗     ██║   █████╗█████╗███████║█████╗██║   ██║ █╗ ██║█████╗  █████╗     ██║
-██║  ██║██╔══╝  ██║     ██╔══╝     ██║   ██╔══╝╚════╝██╔══██║╚════╝██║   ██║███╗██║██╔══╝  ██╔══╝     ██║
-██████╔╝███████╗███████╗███████╗   ██║   ███████╗    ██║  ██║      ██║   ╚███╔███╔╝███████╗███████╗   ██║
-╚═════╝ ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚══════╝    ╚═╝  ╚═╝      ╚═╝    ╚══╝╚══╝ ╚══════╝╚══════╝   ╚═╝
+	██████╗ ███████╗██╗     ███████╗████████╗███████╗     █████╗    ████████╗██╗    ██╗███████╗███████╗████████╗
+	██╔══██╗██╔════╝██║     ██╔════╝╚══██╔══╝██╔════╝    ██╔══██╗   ╚══██╔══╝██║    ██║██╔════╝██╔════╝╚══██╔══╝
+	██║  ██║█████╗  ██║     █████╗     ██║   █████╗█████╗███████║█████╗██║   ██║ █╗ ██║█████╗  █████╗     ██║
+	██║  ██║██╔══╝  ██║     ██╔══╝     ██║   ██╔══╝╚════╝██╔══██║╚════╝██║   ██║███╗██║██╔══╝  ██╔══╝     ██║
+	██████╔╝███████╗███████╗███████╗   ██║   ███████╗    ██║  ██║      ██║   ╚███╔███╔╝███████╗███████╗   ██║
+	╚═════╝ ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚══════╝    ╚═╝  ╚═╝      ╚═╝    ╚══╝╚══╝ ╚══════╝╚══════╝   ╚═╝
 	`)
 	fmt.Println("Please type 'exit' to terminate this program")
 	fmt.Println("You are signed in as", user.Name)
@@ -56,20 +55,21 @@ func reviewTweet() {
 		fmt.Println("All out of tweets")
 		return
 	}
-	currentTweet := tweets[curr]
-	time, err := currentTweet.CreatedAtTime()
+	current = tweets[curr]
+	time, err := current.CreatedAtTime()
 	if err != nil {
 		return
 	}
 
 	fmt.Printf(`
-(%d) %s                                    
+%s                                    
 									 
 %d (R) %d (r) %d (f)
 Created at: %s
+(%d)
 `,
-		currentTweet.ID, currentTweet.Text, currentTweet.ReplyCount,
-		currentTweet.RetweetCount, currentTweet.FavoriteCount, time.String())
+		current.Text, current.ReplyCount, current.RetweetCount,
+		current.FavoriteCount, time.String(), current.ID)
 }
 
 func executor(in string) {
@@ -83,10 +83,11 @@ func executor(in string) {
 			log.Fatal(err)
 		}
 		fmt.Printf("Loaded %d tweets\n", len(tweets))
-		fmt.Println("Type 'review'to begin..")
+		fmt.Println("Type 'review' to begin..")
 		// ability to load more
 	case "delete":
 		fmt.Println("deleting tweet")
+		fmt.Println(current.ID)
 		if err := delete(current.ID); err != nil {
 			log.Fatal(err)
 		}
