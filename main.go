@@ -8,6 +8,7 @@ import (
 
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
+	"github.com/pkg/browser"
 
 	"github.com/c-bata/go-prompt"
 )
@@ -44,7 +45,7 @@ func main() {
 	╚═════╝ ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚══════╝    ╚═╝  ╚═╝      ╚═╝    ╚══╝╚══╝ ╚══════╝╚══════╝   ╚═╝
 	`)
 	fmt.Println("Please type 'exit' to terminate this program")
-	fmt.Println("You are signed in as", user.Name)
+	fmt.Println("You are signed in as", user.ScreenName)
 	fmt.Println("Begin by typing 'load' to load all of your tweets")
 	p := prompt.New(executor, completer)
 	p.Run()
@@ -74,7 +75,7 @@ Created at: %s
 
 func executor(in string) {
 	switch in {
-	case "exit":
+	case "e", "exit":
 		fmt.Println("exiting...")
 		os.Exit(0)
 	case "load":
@@ -84,15 +85,18 @@ func executor(in string) {
 		}
 		fmt.Printf("Loaded %d tweets\n", len(tweets))
 		fmt.Println("Type 'review' to begin..")
-		// ability to load more
-	case "delete":
-		fmt.Println("deleting tweet")
-		fmt.Println(current.ID)
+	case "d", "delete":
+		fmt.Println("deleting tweet ", current.ID)
 		if err := delete(current.ID); err != nil {
 			log.Fatal(err)
 		}
 	case "review":
-		fmt.Println("Beginning review... ('n' or 'next' to continue)")
+		fmt.Println("Beginning review...")
+		fmt.Println("'n' or 'next' to continue")
+		fmt.Println("'o' or 'open' to open current tweet in browser")
+		fmt.Println("'d' or 'delete' to delete the current tweet")
+		fmt.Println("'b' or 'back' to navigate to the previous tweet")
+		fmt.Println("'e' or 'exit' to exit")
 		reviewTweet()
 		curr++
 	case "n", "next":
@@ -105,6 +109,8 @@ func executor(in string) {
 		}
 		curr--
 		reviewTweet()
+	case "o", "open":
+		browser.OpenURL("https://twitter.com/" + user.ScreenName + "/status/" + current.IDStr)
 	default:
 		return
 	}
@@ -113,14 +119,18 @@ func executor(in string) {
 func completer(in prompt.Document) []prompt.Suggest {
 	suggestions := []prompt.Suggest{
 		{Text: "exit"},
-		{Text: "load"},
+		{Text: "load", Description: "Load all of your tweets"},
 	}
 	if len(tweets) > 0 {
 		suggestions = append(suggestions,
 			prompt.Suggest{Text: "delete", Description: "Delete the current tweet"},
 			prompt.Suggest{Text: "review", Description: "Review loaded tweets"},
 			prompt.Suggest{Text: "next", Description: "Continue on reviewing the next tweet"},
+			prompt.Suggest{Text: "open", Description: "Open current tweet in default browser"},
 		)
+	}
+	if curr > 0 {
+		suggestions = append(suggestions, prompt.Suggest{Text: "back", Description: "Navigate to the previous tweet"})
 	}
 	w := in.GetWordBeforeCursor()
 	if w == "" {
